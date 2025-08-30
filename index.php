@@ -7,7 +7,7 @@ $squaresPerRow = 8;
 $pieceSizePercentage = .6;
 $borderSize = 0;
 $hexAtPieceCreation;
-$playingBlack = true;
+$playingBlack = false;
 ?>
 <style>
    
@@ -145,7 +145,17 @@ $playingBlack = true;
         $boardInfo = [[1,3,0], [1,2,1], [1,1,2], [1,4,3], [1,5,4], [1,1,5], [1,2,6], [1,3,7],
                     [1,0,8], [1,0,9], [1,0,10], [1,0,11], [1,0,12], [1,0,13], [1,0,14], [1,0,15],
                     [0,0,48],[0,0,49],[0,0,50],[0,0,51],[0,0,52],[0,0,53],[0,0,54],[0,0,55],
-                    [0,3,56], [0,2,57], [0,1,58], [0,4,59], [0,5,60], [0,1,61], [0,2,62], [0,3,63]];//White/black 0=white, piece_type pawn=0 bishop=1 knight=2 rook=3 queen=4 king=5, square index
+                    [0,3,56], [0,2,57], [0,1,58], [0,4,59], [0,5,60], [0,1,61], [0,2,62], [0,3,63]];
+                    //White/black 0=white, piece_type pawn=0 bishop=1 knight=2 rook=3 queen=4 king=5, square index
+
+        ?>
+        <script>
+        var phpBoard = <?php echo json_encode($boardInfo); ?>; 
+        var phpSquaresPerRow = <?php echo json_encode($squaresPerRow); ?>;
+        var phpPlayingBlack = <?php echo json_encode($playingBlack); ?>
+        </script>
+
+        <?php
         
        
         for ($i = 0; $i < count($boardInfo); $i++){
