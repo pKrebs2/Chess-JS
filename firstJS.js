@@ -6,9 +6,20 @@ let OGstartX = 0;
 let OGstartY = 0;
 
 var w = -1;
+var selectedPiece;
+var possibleMoves = [39,24,31,32,33,34,35];
 
 const board = phpBoard;
+const boardIndexes = new Array(phpBoard.length);
+for(var h = 0; h < boardIndexes.length; h++){
+    boardIndexes[h] = h;
+}
+
 const squaresPerRow = phpSquaresPerRow;
+const tempSquareColors = new Map();
+
+let turn = !phpPlayingBlack;//true = white
+
 console.log(board);
 console.log(squaresPerRow);
 
@@ -40,6 +51,10 @@ function mouseDown(e){
 
     document.addEventListener('mousemove', mouseMove);
     document.addEventListener('mouseup', mouseUp);
+
+    selectedPiece = board[boardIndexes[w]];
+    console.log(board[boardIndexes[w]]);
+    glowPossibleSquares();
 }
 
 function mouseMove(e){
@@ -61,12 +76,14 @@ function mouseUp(e){
     // console.log(w);
     for(let i = 0; i < square.length; i++){
         // console.log(i);
-        if ((square[i].offsetLeft < piece[w].offsetLeft) && ((piece[w].offsetLeft+ piece[w].offsetWidth)< (square[i].offsetLeft+square[i].offsetWidth)) && (piece[w].offsetTop > square[i].offsetTop) && ((square[i].offsetTop+square[i].offsetHeight)> (piece[w].offsetTop+piece[w].offsetHeight))){
+        if (((square[i].offsetLeft < piece[w].offsetLeft) && ((piece[w].offsetLeft+ piece[w].offsetWidth)< (square[i].offsetLeft+square[i].offsetWidth)) && (piece[w].offsetTop > square[i].offsetTop) && ((square[i].offsetTop+square[i].offsetHeight)> (piece[w].offsetTop+piece[w].offsetHeight))) && isMoveLegal(i, selectedPiece[2], possibleMoves)){
         document.removeEventListener('mousemove', mouseMove);
         document.removeEventListener('mouseup', mouseUp);
         flipBoard();
         console.log("f1");
         // console.log("break!");
+
+        unglowPossibleSquares();
         return;
         }else{
             
@@ -92,6 +109,7 @@ function mouseUp(e){
     document.removeEventListener('mouseup', mouseUp);
     piece[w].style.left = (OGstartX);
     piece[w].style.top = (OGstartY);
+    unglowPossibleSquares();
 
     
     // console.log("OGX: " + OGstartX);
@@ -148,6 +166,44 @@ function getMiddleOfBoard(){
     var squareLen = square[0].offsetWidth;
     
     return squareLen * half;
+
+}
+
+function isMoveLegal(newSquareIndex, oldSquareIndex, possibleMoves){
+    if (newSquareIndex != oldSquareIndex){
+        turn = !turn;
+    }
+
+    return possibleMoves.includes(newSquareIndex);
+
+}
+
+//This function will have a lot to it lol
+//Calculated when the piece is picked up
+function getPossibleMoves(){
+    //if ((selectedPiece[0] == 0 && turn == false) || (selectedPiece[0] == 1 && turn == true)){
+    //    return false;
+    //}
+    
+
+}
+
+function glowPossibleSquares(){
+    for(var i = 0; i < possibleMoves.length; i++){
+        tempSquareColors.set(possibleMoves[i], square[possibleMoves[i]].style.backgroundColor);
+        square[possibleMoves[i]].style.backgroundColor = "blue";
+        
+
+    }
+}
+
+function unglowPossibleSquares(){
+    for(var i = 0; i < possibleMoves.length; i++){
+        square[possibleMoves[i]].style.backgroundColor = tempSquareColors.get(possibleMoves[i]);
+        
+
+    }
+
 
 }
 
