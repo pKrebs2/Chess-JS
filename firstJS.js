@@ -8,6 +8,7 @@ let OGstartY = 0;
 var w = -1;
 var selectedPiece;
 var possibleMoves = [];
+var enPassantCaptures = -1;
 
 const board = phpBoard;
 // const boardIndexes = new Map();
@@ -19,7 +20,7 @@ const squaresPerRow = phpSquaresPerRow;
 const tempSquareColors = new Map();
 
 let moves = new Array();
-moves = [0,0,0];
+
 let turn = !phpPlayingBlack;//true = white
 
 console.log("board " + board);
@@ -56,7 +57,7 @@ function mouseDown(e){
     document.addEventListener('mouseup', mouseUp);
 
     selectedPiece = board[w];
-    console.log("sp " + selectedPiece);
+    console.log("selected piece " + selectedPiece);
     getPossibleMoves();
     glowPossibleSquares();
 
@@ -91,7 +92,10 @@ function mouseUp(e){
         // console.log("break!");
 
         possibleMoves = [];
+        enPassantCaptures = -1;
+
         return;
+
         }else{
             
             // window.alert(square.style.left + " " + newX + " " + square.style.right);
@@ -177,15 +181,24 @@ function getMiddleOfBoard(){
 
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
 function isMoveLegal(newSquareIndex, oldSquareIndex, possibleMoves){
     if (possibleMoves.includes(newSquareIndex)){
         turn = !turn;
         //flipBoard();
-        doCapture(newSquareIndex);
+
+        if(enPassantCaptures != -1 && ((newSquareIndex == moves[moves.length-1][1][2] + squaresPerRow) || (moves[moves.length-1][1][2] - squaresPerRow))){
+            doCapture(enPassantCaptures, true);
+            console.log("EN PASSANT");
+        }else{
+            doCapture(newSquareIndex, false);
+        }
+
         selectedPiece[2] = newSquareIndex;
-        moves.push = selectedPiece[2];
+        moves.push([[selectedPiece[0],selectedPiece[1],oldSquareIndex], [selectedPiece[0],selectedPiece[1],newSquareIndex]]);
+        
     }else if(newSquareIndex == oldSquareIndex){
-        return true;
+        return true; // I know this seems like it should be false, but true is correct
     }
 
     
@@ -267,17 +280,18 @@ function pawnRules(){
     }
 
     //En Passant
-    if((moves[moves.length-1][2] == selectedPiece[2] + 1) && (moves[moves.length-1][1] == 0) && (selectedPiece[0] == 0) && (selectedPiece[2] % squaresPerRow != squaresPerRow -1)){
-        possibleMoves.push(selectedPiece[2] - squaresPerRow + 1);
-    }else if(selectedPiece[0] == 1 && (checkOccupied(selectedPiece[2] + squaresPerRow + 1) == 0) && (selectedPiece[2] % squaresPerRow != squaresPerRow -1)){
-        possibleMoves.push(selectedPiece[2] + squaresPerRow + 1);
+    if (moves.length > 0){
+ 
+        if((moves[moves.length-1][0][1] == 0) && (moves[moves.length-1][1][2] == moves[moves.length-1][0][2] + (squaresPerRow * 2)) && (selectedPiece[0] == 0) && ((selectedPiece[2] == moves[moves.length-1][1][2] + 1) || (selectedPiece[2] == moves[moves.length-1][1][2] - 1)) && (squaresPerRow*3 <= selectedPiece[2]) && selectedPiece[2] < squaresPerRow*4){//The last two conditions are just for wrap around but I didn't feel like doing the mod math
+            possibleMoves.push(moves[moves.length-1][0][2] + squaresPerRow);
+            enPassantCaptures = (moves[moves.length-1][1][2]);
+        }
+        if((moves[moves.length-1][0][1] == 0) && (moves[moves.length-1][1][2] == moves[moves.length-1][0][2] - (squaresPerRow * 2)) && (selectedPiece[0] == 1) && ((selectedPiece[2] == moves[moves.length-1][1][2] + 1) || (selectedPiece[2] == moves[moves.length-1][1][2] - 1)) && (squaresPerRow*(squaresPerRow-4) <= selectedPiece[2]) && selectedPiece[2] < squaresPerRow*(squaresPerRow-3)){//The last two conditions are just for wrap around but I didn't feel like doing the mod math
+            possibleMoves.push(moves[moves.length-1][0][2] - squaresPerRow);
+            enPassantCaptures = (moves[moves.length-1][1][2]);
+        }
     }
-
-    if(selectedPiece[0] == 0 && (checkOccupied(selectedPiece[2] - squaresPerRow - 1) == 1) && (selectedPiece[2] % squaresPerRow != 0)){
-        possibleMoves.push(selectedPiece[2] - squaresPerRow - 1);
-    }else if(selectedPiece[0] == 1 && (checkOccupied(selectedPiece[2] + squaresPerRow - 1) == 0) && (selectedPiece[2] % squaresPerRow != 0)){
-        possibleMoves.push(selectedPiece[2] + squaresPerRow - 1);
-    }
+    
     
 
     
@@ -295,9 +309,8 @@ function checkOccupied(index){
     return -1;
 }
 
-function doCapture(squareIndex){
-    var captNumb = checkOccupied(squareIndex);
-    if (captNumb == -1){
+function doCapture(squareIndex, isEnpassant){
+    if (!isEnpassant && checkOccupied(squareIndex) == -1){
         return;
     }else{
         for (var i = 0; i < board.length; i++){
