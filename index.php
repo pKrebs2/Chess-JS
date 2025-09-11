@@ -7,7 +7,7 @@ $squaresPerRow = 8;
 $pieceSizePercentage = .6;
 $borderSize = 0;
 $hexAtPieceCreation;
-$playingBlack = false;
+$playingBlack = false; //always set to false: needs a change
 ?>
 <style>
    
@@ -99,6 +99,10 @@ $playingBlack = false;
 
     }
 
+    button{
+        height: 20px;
+        width: 100px;
+    }
    
 
 
@@ -106,7 +110,7 @@ $playingBlack = false;
 
 </head>
     <body>
-        <!-- <button type="button" onclick="myfunc()" id="button" draggable="true">clicky</button> -->
+        <button type="button" onclick="flipBoard()" id="button" >Flip board</button>
         
         
         

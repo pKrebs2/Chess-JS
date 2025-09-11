@@ -7,20 +7,22 @@ let OGstartY = 0;
 
 var w = -1;
 var selectedPiece;
-var possibleMoves = [39,24,31,32,33,34,35];
+var possibleMoves = [];
 
 const board = phpBoard;
-const boardIndexes = new Array(phpBoard.length);
-for(var h = 0; h < boardIndexes.length; h++){
-    boardIndexes[h] = h;
-}
+// const boardIndexes = new Map();
+// for(var h = 0; h < board.length; h++){
+//     boardIndexes.set(h, board[h][2]);
+// }
 
 const squaresPerRow = phpSquaresPerRow;
 const tempSquareColors = new Map();
 
+let moves = new Array();
+moves = [0,0,0];
 let turn = !phpPlayingBlack;//true = white
 
-console.log(board);
+console.log("board " + board);
 console.log(squaresPerRow);
 
 const piece = document.getElementsByClassName('piece');
@@ -39,6 +41,7 @@ function mouseDown(e){
 
     console.log(e.target);
     w = parseInt(e.target.id);
+    console.log("w " + w);
     console.log("mouseDown");
     console.log(w);
     
@@ -52,9 +55,11 @@ function mouseDown(e){
     document.addEventListener('mousemove', mouseMove);
     document.addEventListener('mouseup', mouseUp);
 
-    selectedPiece = board[boardIndexes[w]];
-    console.log(board[boardIndexes[w]]);
+    selectedPiece = board[w];
+    console.log("sp " + selectedPiece);
+    getPossibleMoves();
     glowPossibleSquares();
+
 }
 
 function mouseMove(e){
@@ -74,16 +79,18 @@ function mouseMove(e){
 function mouseUp(e){
     // console.log("mouseUp");
     // console.log(w);
+    unglowPossibleSquares();
     for(let i = 0; i < square.length; i++){
         // console.log(i);
         if (((square[i].offsetLeft < piece[w].offsetLeft) && ((piece[w].offsetLeft+ piece[w].offsetWidth)< (square[i].offsetLeft+square[i].offsetWidth)) && (piece[w].offsetTop > square[i].offsetTop) && ((square[i].offsetTop+square[i].offsetHeight)> (piece[w].offsetTop+piece[w].offsetHeight))) && isMoveLegal(i, selectedPiece[2], possibleMoves)){
+        
         document.removeEventListener('mousemove', mouseMove);
         document.removeEventListener('mouseup', mouseUp);
-        flipBoard();
+        
         console.log("f1");
         // console.log("break!");
 
-        unglowPossibleSquares();
+        possibleMoves = [];
         return;
         }else{
             
@@ -105,11 +112,12 @@ function mouseUp(e){
         
 
     }
+    
     document.removeEventListener('mousemove', mouseMove);
     document.removeEventListener('mouseup', mouseUp);
     piece[w].style.left = (OGstartX);
     piece[w].style.top = (OGstartY);
-    unglowPossibleSquares();
+    
 
     
     // console.log("OGX: " + OGstartX);
@@ -170,10 +178,17 @@ function getMiddleOfBoard(){
 }
 
 function isMoveLegal(newSquareIndex, oldSquareIndex, possibleMoves){
-    if (newSquareIndex != oldSquareIndex){
+    if (possibleMoves.includes(newSquareIndex)){
         turn = !turn;
+        //flipBoard();
+        doCapture(newSquareIndex);
+        selectedPiece[2] = newSquareIndex;
+        moves.push = selectedPiece[2];
+    }else if(newSquareIndex == oldSquareIndex){
+        return true;
     }
 
+    
     return possibleMoves.includes(newSquareIndex);
 
 }
@@ -181,30 +196,122 @@ function isMoveLegal(newSquareIndex, oldSquareIndex, possibleMoves){
 //This function will have a lot to it lol
 //Calculated when the piece is picked up
 function getPossibleMoves(){
-    //if ((selectedPiece[0] == 0 && turn == false) || (selectedPiece[0] == 1 && turn == true)){
-    //    return false;
-    //}
+    if (!((selectedPiece[0] == 0 && turn == false) || (selectedPiece[0] == 1 && turn == true))){
+        // possibleMoves = [selectedPiece[2]];
+        if(selectedPiece[1] == 0){
+            pawnRules();
+        }
+    }
     
+
 
 }
 
 function glowPossibleSquares(){
     for(var i = 0; i < possibleMoves.length; i++){
-        tempSquareColors.set(possibleMoves[i], square[possibleMoves[i]].style.backgroundColor);
+        if(square[possibleMoves[i]].style.backgroundColor != "blue"){
+            tempSquareColors.set(possibleMoves[i], square[possibleMoves[i]].style.backgroundColor);
+        }
+        
         square[possibleMoves[i]].style.backgroundColor = "blue";
+        
         
 
     }
 }
 
 function unglowPossibleSquares(){
+    console.log("unglow");
     for(var i = 0; i < possibleMoves.length; i++){
+        // console.log(tempSquareColors.get(possibleMoves[i]));
         square[possibleMoves[i]].style.backgroundColor = tempSquareColors.get(possibleMoves[i]);
+        // console.log(square[possibleMoves[i]].style.backgroundColor);
+
         
 
     }
+    tempSquareColors.clear();
 
 
 }
 
 
+function pawnRules(){
+    //Thought about doing some crazy math so black and white could use the same calculation. But then decided against it bc it's only for pawns
+    //Normal move
+    if(selectedPiece[0] == 0 && (checkOccupied(selectedPiece[2] - squaresPerRow) == -1)){
+        possibleMoves.push(selectedPiece[2] - squaresPerRow);
+    }else if(selectedPiece[0] == 1 && (checkOccupied(selectedPiece[2] + squaresPerRow) == -1)){
+        possibleMoves.push(selectedPiece[2] + squaresPerRow);
+    }
+
+
+    //Moving two on the first move
+    if((selectedPiece[0] == 0) && (squaresPerRow * (squaresPerRow -2)) <= (selectedPiece[2]) && (selectedPiece[2]) < (squaresPerRow * (squaresPerRow -1)) && checkOccupied(selectedPiece[2] - (2 * squaresPerRow)) == -1){
+        possibleMoves.push(selectedPiece[2] - (2 * squaresPerRow));
+    }else if((selectedPiece[0] == 1) && (squaresPerRow) <= (selectedPiece[2]) && (selectedPiece[2]) < (squaresPerRow * 2) && checkOccupied(selectedPiece[2] + (2 * squaresPerRow)) == -1){
+        possibleMoves.push(selectedPiece[2] + (2 * squaresPerRow));
+    }
+
+    //Capturing
+    if(selectedPiece[0] == 0 && (checkOccupied(selectedPiece[2] - squaresPerRow + 1) == 1) && (selectedPiece[2] % squaresPerRow != squaresPerRow -1)){
+        possibleMoves.push(selectedPiece[2] - squaresPerRow + 1);
+    }else if(selectedPiece[0] == 1 && (checkOccupied(selectedPiece[2] + squaresPerRow + 1) == 0) && (selectedPiece[2] % squaresPerRow != squaresPerRow -1)){
+        possibleMoves.push(selectedPiece[2] + squaresPerRow + 1);
+    }
+
+    if(selectedPiece[0] == 0 && (checkOccupied(selectedPiece[2] - squaresPerRow - 1) == 1) && (selectedPiece[2] % squaresPerRow != 0)){
+        possibleMoves.push(selectedPiece[2] - squaresPerRow - 1);
+    }else if(selectedPiece[0] == 1 && (checkOccupied(selectedPiece[2] + squaresPerRow - 1) == 0) && (selectedPiece[2] % squaresPerRow != 0)){
+        possibleMoves.push(selectedPiece[2] + squaresPerRow - 1);
+    }
+
+    //En Passant
+    if((moves[moves.length-1][2] == selectedPiece[2] + 1) && (moves[moves.length-1][1] == 0) && (selectedPiece[0] == 0) && (selectedPiece[2] % squaresPerRow != squaresPerRow -1)){
+        possibleMoves.push(selectedPiece[2] - squaresPerRow + 1);
+    }else if(selectedPiece[0] == 1 && (checkOccupied(selectedPiece[2] + squaresPerRow + 1) == 0) && (selectedPiece[2] % squaresPerRow != squaresPerRow -1)){
+        possibleMoves.push(selectedPiece[2] + squaresPerRow + 1);
+    }
+
+    if(selectedPiece[0] == 0 && (checkOccupied(selectedPiece[2] - squaresPerRow - 1) == 1) && (selectedPiece[2] % squaresPerRow != 0)){
+        possibleMoves.push(selectedPiece[2] - squaresPerRow - 1);
+    }else if(selectedPiece[0] == 1 && (checkOccupied(selectedPiece[2] + squaresPerRow - 1) == 0) && (selectedPiece[2] % squaresPerRow != 0)){
+        possibleMoves.push(selectedPiece[2] + squaresPerRow - 1);
+    }
+    
+
+    
+
+}
+
+//return -1 for empty, 0 for white, 1 for black
+function checkOccupied(index){
+    for(var i = 0; i < board.length; i++){
+        if(board[i][2] == index){
+            return board[i][0];
+        }
+
+    }
+    return -1;
+}
+
+function doCapture(squareIndex){
+    var captNumb = checkOccupied(squareIndex);
+    if (captNumb == -1){
+        return;
+    }else{
+        for (var i = 0; i < board.length; i++){
+            if (board[i][2] == squareIndex){
+                console.log("capture");
+                board[i][2] = -1;
+                piece[i].style.display = 'none'; //Way easier than removing from DOM and remapping indexes. I don't care if it's a bad practice
+                console.log(board);
+                // boardIndexes.delete(i);
+                // console.log(boardIndexes);
+                console.log(piece);
+                // piece[i].remove();
+            }
+        }
+    }
+
+}
