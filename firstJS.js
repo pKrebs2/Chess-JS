@@ -10,7 +10,69 @@ var selectedPiece;
 var possibleMoves = [];
 var enPassantCaptures = -1;
 
-const board = phpBoard;
+const boardArray = phpBoard;
+
+class bPiece{ //boardPiece
+    //White/black 0=white, piece_type pawn=0 bishop=1 knight=2 rook=3 queen=4 king=5, square index
+    #color;
+    #pieceType;
+    #location;
+    constructor(pieceArrayInfo){
+        if (pieceArrayInfo[0] == 0 || pieceArrayInfo[0] == "white"){
+            this.#color = "white";
+        }
+        else{
+            this.#color = "black";
+        }
+
+        if (pieceArrayInfo[1] == 0 || pieceArrayInfo[1] == "pawn"){
+            this.#pieceType= "pawn";
+        }
+        else if (pieceArrayInfo[1] == 1 || pieceArrayInfo[1] == "bishop"){
+            this.#pieceType = "bishop";
+        }
+        else if (pieceArrayInfo[1] == 2 || pieceArrayInfo[1] == "knight"){
+            this.#pieceType = "knight";
+        }
+        else if (pieceArrayInfo[1] == 3 || pieceArrayInfo[1] == "rook"){
+            this.#pieceType = "rook";
+        }
+        else if (pieceArrayInfo[1] == 4 || pieceArrayInfo[1] == "queen"){
+            this.#pieceType = "queen";
+        }
+        else if (pieceArrayInfo[1] == 5 || pieceArrayInfo[1] == "king"){
+            this.#pieceType = "king";
+        }
+
+        this.#location = pieceArrayInfo[2];
+
+    }
+
+
+    setPieceType(newPieceType){
+        this.#pieceType = newPieceType;
+    }
+
+    setLocation(newLocation){
+        this.#location = newLocation;
+    }
+
+
+    getColor(){
+        return this.#color;
+    }
+    getPieceType(){
+        return this.#pieceType;
+    }
+    getLocation(){
+        return this.#location;
+    }
+
+
+}
+
+
+
 // const boardIndexes = new Map();
 // for(var h = 0; h < board.length; h++){
 //     boardIndexes.set(h, board[h][2]);
@@ -23,12 +85,15 @@ let moves = new Array();
 
 let turn = !phpPlayingBlack;//true = white
 
-console.log("board " + board);
 console.log(squaresPerRow);
 
 const piece = document.getElementsByClassName('piece');
 const square = document.getElementsByClassName('square');
 
+const board = new Array(boardArray.length);
+for (var i = 0; i < boardArray.length; i++){
+    board[i] = new bPiece(boardArray[i]);
+}
 
 
 for(var i = 0; i < piece.length; i++){
@@ -57,7 +122,7 @@ function mouseDown(e){
     document.addEventListener('mouseup', mouseUp);
 
     selectedPiece = board[w];
-    console.log("selected piece " + selectedPiece);
+    console.log("selected piece " + selectedPiece.getLocation());
     getPossibleMoves();
     glowPossibleSquares();
 
@@ -83,12 +148,11 @@ function mouseUp(e){
     unglowPossibleSquares();
     for(let i = 0; i < square.length; i++){
         // console.log(i);
-        if (((square[i].offsetLeft < piece[w].offsetLeft) && ((piece[w].offsetLeft+ piece[w].offsetWidth)< (square[i].offsetLeft+square[i].offsetWidth)) && (piece[w].offsetTop > square[i].offsetTop) && ((square[i].offsetTop+square[i].offsetHeight)> (piece[w].offsetTop+piece[w].offsetHeight))) && isMoveLegal(i, selectedPiece[2], possibleMoves)){
+        if (((square[i].offsetLeft < piece[w].offsetLeft) && ((piece[w].offsetLeft+ piece[w].offsetWidth)< (square[i].offsetLeft+square[i].offsetWidth)) && (piece[w].offsetTop > square[i].offsetTop) && ((square[i].offsetTop+square[i].offsetHeight)> (piece[w].offsetTop+piece[w].offsetHeight))) && isMoveLegal(i, selectedPiece.getLocation(), possibleMoves)){
         
         document.removeEventListener('mousemove', mouseMove);
         document.removeEventListener('mouseup', mouseUp);
         
-        console.log("f1");
         // console.log("break!");
 
         possibleMoves = [];
@@ -134,9 +198,8 @@ function mouseUp(e){
 
 
 function flipBoard(){
-    console.log("f5");
     var mid = getMiddleOfBoard();
-    var distanceFromMid;
+    // var distanceFromMid;
     // var i = 7;
     // distanceFromMid = mid - (square[i].offsetLeft + (square[i].offsetWidth / 2));
     // square[i].style.left = (+distanceFromMid) + 'px';
@@ -187,15 +250,16 @@ function isMoveLegal(newSquareIndex, oldSquareIndex, possibleMoves){
         turn = !turn;
         //flipBoard();
 
-        if(enPassantCaptures != -1 && ((newSquareIndex == moves[moves.length-1][1][2] + squaresPerRow) || (moves[moves.length-1][1][2] - squaresPerRow))){
+        if(enPassantCaptures != -1 && ((newSquareIndex == moves[moves.length-1][1].getLocation() + squaresPerRow) || (moves[moves.length-1][1].getLocation() - squaresPerRow))){
             doCapture(enPassantCaptures, true);
-            console.log("EN PASSANT");
+            // console.log("EN PASSANT");
         }else{
             doCapture(newSquareIndex, false);
         }
 
-        selectedPiece[2] = newSquareIndex;
-        moves.push([[selectedPiece[0],selectedPiece[1],oldSquareIndex], [selectedPiece[0],selectedPiece[1],newSquareIndex]]);
+        var oldPiece = new bPiece([selectedPiece.getColor(), selectedPiece.getPieceType(), oldSquareIndex]);
+        selectedPiece.setLocation(newSquareIndex);
+        moves.push([oldPiece, selectedPiece]);
         
     }else if(newSquareIndex == oldSquareIndex){
         return true; // I know this seems like it should be false, but true is correct
@@ -209,9 +273,9 @@ function isMoveLegal(newSquareIndex, oldSquareIndex, possibleMoves){
 //This function will have a lot to it lol
 //Calculated when the piece is picked up
 function getPossibleMoves(){
-    if (!((selectedPiece[0] == 0 && turn == false) || (selectedPiece[0] == 1 && turn == true))){
+    if (!((selectedPiece.getColor == "white" && turn == false) || (selectedPiece.getColor() == "black" && turn == true))){
         // possibleMoves = [selectedPiece[2]];
-        if(selectedPiece[1] == 0){
+        if(selectedPiece.getPieceType() == "pawn"){
             pawnRules();
         }
     }
@@ -252,43 +316,44 @@ function unglowPossibleSquares(){
 function pawnRules(){
     //Thought about doing some crazy math so black and white could use the same calculation. But then decided against it bc it's only for pawns
     //Normal move
-    if(selectedPiece[0] == 0 && (checkOccupied(selectedPiece[2] - squaresPerRow) == -1)){
-        possibleMoves.push(selectedPiece[2] - squaresPerRow);
-    }else if(selectedPiece[0] == 1 && (checkOccupied(selectedPiece[2] + squaresPerRow) == -1)){
-        possibleMoves.push(selectedPiece[2] + squaresPerRow);
+    if(selectedPiece.getColor() == "white" && (checkOccupied(selectedPiece.getLocation() - squaresPerRow) == -1)){
+        possibleMoves.push(selectedPiece.getLocation() - squaresPerRow);
+    }else if(selectedPiece.getColor() == "black" && (checkOccupied(selectedPiece.getLocation() + squaresPerRow) == -1)){
+        possibleMoves.push(selectedPiece.getLocation() + squaresPerRow);
     }
 
 
     //Moving two on the first move
-    if((selectedPiece[0] == 0) && (squaresPerRow * (squaresPerRow -2)) <= (selectedPiece[2]) && (selectedPiece[2]) < (squaresPerRow * (squaresPerRow -1)) && checkOccupied(selectedPiece[2] - (2 * squaresPerRow)) == -1){
-        possibleMoves.push(selectedPiece[2] - (2 * squaresPerRow));
-    }else if((selectedPiece[0] == 1) && (squaresPerRow) <= (selectedPiece[2]) && (selectedPiece[2]) < (squaresPerRow * 2) && checkOccupied(selectedPiece[2] + (2 * squaresPerRow)) == -1){
-        possibleMoves.push(selectedPiece[2] + (2 * squaresPerRow));
+    if((selectedPiece.getColor() == "white") && (squaresPerRow * (squaresPerRow -2)) <= (selectedPiece.getLocation()) && (selectedPiece.getLocation()) < (squaresPerRow * (squaresPerRow -1)) && checkOccupied(selectedPiece.getLocation() - (2 * squaresPerRow)) == -1){
+        possibleMoves.push(selectedPiece.getLocation() - (2 * squaresPerRow));
+    }else if((selectedPiece.getColor() == "black") && (squaresPerRow) <= (selectedPiece.getLocation()) && (selectedPiece.getLocation()) < (squaresPerRow * 2) && checkOccupied(selectedPiece.getLocation() + (2 * squaresPerRow)) == -1){
+        possibleMoves.push(selectedPiece.getLocation() + (2 * squaresPerRow));
     }
 
     //Capturing
-    if(selectedPiece[0] == 0 && (checkOccupied(selectedPiece[2] - squaresPerRow + 1) == 1) && (selectedPiece[2] % squaresPerRow != squaresPerRow -1)){
-        possibleMoves.push(selectedPiece[2] - squaresPerRow + 1);
-    }else if(selectedPiece[0] == 1 && (checkOccupied(selectedPiece[2] + squaresPerRow + 1) == 0) && (selectedPiece[2] % squaresPerRow != squaresPerRow -1)){
-        possibleMoves.push(selectedPiece[2] + squaresPerRow + 1);
+    
+    if(selectedPiece.getColor() == "white" && (checkOccupied(selectedPiece.getLocation() - squaresPerRow + 1) == "black") && (selectedPiece.getLocation() % squaresPerRow != squaresPerRow -1)){
+        possibleMoves.push(selectedPiece.getLocation() - squaresPerRow + 1);
+    }else if(selectedPiece.getColor() == "black" && (checkOccupied(selectedPiece.getLocation() + squaresPerRow + 1) == "white") && (selectedPiece.getLocation() % squaresPerRow != squaresPerRow -1)){
+        possibleMoves.push(selectedPiece.getLocation() + squaresPerRow + 1);
     }
 
-    if(selectedPiece[0] == 0 && (checkOccupied(selectedPiece[2] - squaresPerRow - 1) == 1) && (selectedPiece[2] % squaresPerRow != 0)){
-        possibleMoves.push(selectedPiece[2] - squaresPerRow - 1);
-    }else if(selectedPiece[0] == 1 && (checkOccupied(selectedPiece[2] + squaresPerRow - 1) == 0) && (selectedPiece[2] % squaresPerRow != 0)){
-        possibleMoves.push(selectedPiece[2] + squaresPerRow - 1);
+    if(selectedPiece.getColor() == "white" && (checkOccupied(selectedPiece.getLocation() - squaresPerRow - 1) == "black") && (selectedPiece.getLocation() % squaresPerRow != 0)){
+        possibleMoves.push(selectedPiece.getLocation() - squaresPerRow - 1);
+    }else if(selectedPiece.getColor() == "black" && (checkOccupied(selectedPiece.getLocation() + squaresPerRow - 1) == "white") && (selectedPiece.getLocation() % squaresPerRow != 0)){
+        possibleMoves.push(selectedPiece.getLocation() + squaresPerRow - 1);
     }
 
     //En Passant
     if (moves.length > 0){
- 
-        if((moves[moves.length-1][0][1] == 0) && (moves[moves.length-1][1][2] == moves[moves.length-1][0][2] + (squaresPerRow * 2)) && (selectedPiece[0] == 0) && ((selectedPiece[2] == moves[moves.length-1][1][2] + 1) || (selectedPiece[2] == moves[moves.length-1][1][2] - 1)) && (squaresPerRow*3 <= selectedPiece[2]) && selectedPiece[2] < squaresPerRow*4){//The last two conditions are just for wrap around but I didn't feel like doing the mod math
-            possibleMoves.push(moves[moves.length-1][0][2] + squaresPerRow);
-            enPassantCaptures = (moves[moves.length-1][1][2]);
+        console.log("1 " + moves[moves.length-1][0].getPieceType());
+        if((moves[moves.length-1][0].getPieceType() == "pawn") && (moves[moves.length-1][1].getLocation() == moves[moves.length-1][0].getLocation() + (squaresPerRow * 2)) && (selectedPiece.getColor() == "white") && ((selectedPiece.getLocation() == moves[moves.length-1][1].getLocation() + 1) || (selectedPiece.getLocation() == moves[moves.length-1][1].getLocation() - 1)) && (squaresPerRow*3 <= selectedPiece.getLocation()) && selectedPiece.getLocation() < squaresPerRow*4){//The last two conditions are just for wrap around but I didn't feel like doing the mod math
+            possibleMoves.push(moves[moves.length-1][0].getLocation() + squaresPerRow);
+            enPassantCaptures = (moves[moves.length-1][1].getLocation());
         }
-        if((moves[moves.length-1][0][1] == 0) && (moves[moves.length-1][1][2] == moves[moves.length-1][0][2] - (squaresPerRow * 2)) && (selectedPiece[0] == 1) && ((selectedPiece[2] == moves[moves.length-1][1][2] + 1) || (selectedPiece[2] == moves[moves.length-1][1][2] - 1)) && (squaresPerRow*(squaresPerRow-4) <= selectedPiece[2]) && selectedPiece[2] < squaresPerRow*(squaresPerRow-3)){//The last two conditions are just for wrap around but I didn't feel like doing the mod math
-            possibleMoves.push(moves[moves.length-1][0][2] - squaresPerRow);
-            enPassantCaptures = (moves[moves.length-1][1][2]);
+        if((moves[moves.length-1][0].getPieceType() == "pawn") && (moves[moves.length-1][1].getLocation() == moves[moves.length-1][0].getLocation() - (squaresPerRow * 2)) && (selectedPiece.getColor() == "black") && ((selectedPiece.getLocation() == moves[moves.length-1][1].getLocation() + 1) || (selectedPiece.getLocation() == moves[moves.length-1][1].getLocation() - 1)) && (squaresPerRow*(squaresPerRow-4) <= selectedPiece.getLocation()) && selectedPiece.getLocation() < squaresPerRow*(squaresPerRow-3)){//The last two conditions are just for wrap around but I didn't feel like doing the mod math
+            possibleMoves.push(moves[moves.length-1][0].getLocation() - squaresPerRow);
+            enPassantCaptures = (moves[moves.length-1][1].getLocation());
         }
     }
     
@@ -301,8 +366,8 @@ function pawnRules(){
 //return -1 for empty, 0 for white, 1 for black
 function checkOccupied(index){
     for(var i = 0; i < board.length; i++){
-        if(board[i][2] == index){
-            return board[i][0];
+        if(board[i].getLocation() == index){
+            return board[i].getColor();
         }
 
     }
@@ -314,9 +379,9 @@ function doCapture(squareIndex, isEnpassant){
         return;
     }else{
         for (var i = 0; i < board.length; i++){
-            if (board[i][2] == squareIndex){
+            if (board[i].getLocation() == squareIndex){
                 console.log("capture");
-                board[i][2] = -1;
+                board[i].setLocation(-1);
                 piece[i].style.display = 'none'; //Way easier than removing from DOM and remapping indexes. I don't care if it's a bad practice
                 console.log(board);
                 // boardIndexes.delete(i);

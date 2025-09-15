@@ -2,7 +2,7 @@
 <html>
 <head>
 <?php 
-$squareSize = 70;
+$squareSize = 45;
 $squaresPerRow = 8;
 $pieceSizePercentage = .6;
 $borderSize = 0;
