@@ -9,6 +9,7 @@ var w = -1;
 var selectedPiece;
 var possibleMoves = [];
 var enPassantCaptures = -1;
+var isMouseDown = false;
 
 const boardArray = phpBoard;
 
@@ -101,17 +102,20 @@ for (var i = 0; i < boardArray.length; i++){
 for(var i = 0; i < piece.length; i++){
     // console.log(piece.length);
     piece[i].addEventListener('mousedown', mouseDown);
+    piece[i].style.zIndex = '50';
 
 }
 
 
 function mouseDown(e){
-
+    if(isMouseDown){
+        return;
+    }
+    isMouseDown = true;
     console.log(e.target);
     w = parseInt(e.target.id);
     console.log("w " + w);
     console.log("mouseDown");
-    console.log(w);
     
 
     startX = e.clientX;
@@ -119,6 +123,12 @@ function mouseDown(e){
     
     OGstartX = piece[w].style.left;
     OGstartY = piece[w].style.top;
+
+
+    console.log("1 OGstartX " + OGstartX);
+    console.log("1 OGstartY " + OGstartY);
+
+    piece[w].style.zIndex = '100';
 
     document.addEventListener('mousemove', mouseMove);
     document.addEventListener('mouseup', mouseUp);
@@ -145,15 +155,18 @@ function mouseMove(e){
 }
 
 function mouseUp(e){
+    isMouseDown = false;
     // console.log("mouseUp");
     // console.log(w);
     unglowPossibleSquares();
+    piece[w].style.zIndex = '50';
     for(let i = 0; i < square.length; i++){
         // console.log(i);
         if (((square[i].offsetLeft < piece[w].offsetLeft) && ((piece[w].offsetLeft+ piece[w].offsetWidth)< (square[i].offsetLeft+square[i].offsetWidth)) && (piece[w].offsetTop > square[i].offsetTop) && ((square[i].offsetTop+square[i].offsetHeight)> (piece[w].offsetTop+piece[w].offsetHeight))) && isMoveLegal(i, selectedPiece.getLocation(), possibleMoves)){
         
         document.removeEventListener('mousemove', mouseMove);
         document.removeEventListener('mouseup', mouseUp);
+
         
         // console.log("break!");
 
@@ -164,7 +177,7 @@ function mouseUp(e){
 
         }else{
             
-            // window.alert(square.style.left + " " + newX + " " + square.style.right);
+            // window.alert("what");
             // console.log("no");
         }
         // console.log("gsl: " + square[i].offsetLeft);
@@ -187,6 +200,11 @@ function mouseUp(e){
     document.removeEventListener('mouseup', mouseUp);
     piece[w].style.left = (OGstartX);
     piece[w].style.top = (OGstartY);
+    console.log("REVERT TO OG X AND Y");
+    console.log("2 OGstartX " + OGstartX);
+    console.log("2 OGstartY " + OGstartY);
+    possibleMoves = [];
+    
     
 
     
@@ -285,6 +303,19 @@ function getPossibleMoves(){
         else if(selectedPiece.getPieceType() == "bishop"){
             bishopRules();
         }
+
+        else if(selectedPiece.getPieceType() == "rook"){
+            rookRules();
+        }
+
+        else if(selectedPiece.getPieceType() == "queen"){
+            bishopRules();
+            rookRules();
+        }
+
+        else if(selectedPiece.getPieceType() == "knight"){
+            knightRules();
+        }
     }
     
 
@@ -371,7 +402,7 @@ function bishopRules(){
     var index = selectedPiece.getLocation() - squaresPerRow - 1;
     var prevIndex = selectedPiece.getLocation();
     console.log("check1 " + prevIndex  % squaresPerRow);
-    while ((index > 0) && (prevIndex  % squaresPerRow != 0) && (checkOccupied(index) != selectedPiece.getColor()) && (checkOccupied(prevIndex) == -1 || prevIndex == selectedPiece.getLocation())){ //up-left
+    while ((index >= 0) && (prevIndex  % squaresPerRow != 0) && (checkOccupied(index) != selectedPiece.getColor()) && (checkOccupied(prevIndex) == -1 || prevIndex == selectedPiece.getLocation())){ //up-left
         possibleMoves.push(index);
 
         prevIndex = index;
@@ -381,7 +412,7 @@ function bishopRules(){
 
     index = selectedPiece.getLocation() - squaresPerRow + 1;
     prevIndex = selectedPiece.getLocation();
-    while ((index > 0) && (prevIndex % squaresPerRow != (squaresPerRow-1)) && (checkOccupied(index) != selectedPiece.getColor()) && (checkOccupied(prevIndex) == -1 || prevIndex == selectedPiece.getLocation())){ //up-right
+    while ((index >= 0) && (prevIndex % squaresPerRow != (squaresPerRow-1)) && (checkOccupied(index) != selectedPiece.getColor()) && (checkOccupied(prevIndex) == -1 || prevIndex == selectedPiece.getLocation())){ //up-right
         // console.log(index);
         possibleMoves.push(index);
 
@@ -414,6 +445,84 @@ function bishopRules(){
 
 
 function rookRules(){ //Castling will be handled by the king, or it's own function. idk
+
+    var index = selectedPiece.getLocation() - squaresPerRow;
+    var prevIndex = selectedPiece.getLocation();
+    while ((index >= 0) && (checkOccupied(index) != selectedPiece.getColor()) && (checkOccupied(prevIndex) == -1 || prevIndex == selectedPiece.getLocation())){ //up
+        possibleMoves.push(index);
+        prevIndex = index;
+        index -= squaresPerRow;
+    }
+
+
+    index = selectedPiece.getLocation() + squaresPerRow;
+    prevIndex = selectedPiece.getLocation();
+    while ((index < (squaresPerRow * squaresPerRow)) && (checkOccupied(index) != selectedPiece.getColor()) && (checkOccupied(prevIndex) == -1 || prevIndex == selectedPiece.getLocation())){ //down
+        possibleMoves.push(index);
+        prevIndex = index;
+        index += squaresPerRow;
+    }
+
+    index = selectedPiece.getLocation() - 1;
+    prevIndex = selectedPiece.getLocation();
+    while ((index >= 0) && (prevIndex % squaresPerRow != 0) && (checkOccupied(index) != selectedPiece.getColor()) && (checkOccupied(prevIndex) == -1 || prevIndex == selectedPiece.getLocation())){ //left
+        possibleMoves.push(index);
+        prevIndex = index;
+        index -= 1;
+    }
+
+    index = selectedPiece.getLocation() + 1;
+    prevIndex = selectedPiece.getLocation();
+    while ((index < (squaresPerRow * squaresPerRow)) && (prevIndex % squaresPerRow != (squaresPerRow-1)) && (checkOccupied(index) != selectedPiece.getColor()) && (checkOccupied(prevIndex) == -1 || prevIndex == selectedPiece.getLocation())){ //right
+        possibleMoves.push(index);
+        prevIndex = index;
+        index += 1;
+    }
+
+}
+
+function knightRules(){
+    //Just checking 8 squares
+    var checkSqaure = selectedPiece.getLocation() - (squaresPerRow * 2) - 1;
+    if (0 <= checkSqaure && checkSqaure < (squaresPerRow * squaresPerRow) && (checkOccupied(checkSqaure) != selectedPiece.getColor()) && selectedPiece.getLocation() % squaresPerRow !=0){
+        possibleMoves.push(checkSqaure);
+    }
+
+    checkSqaure = selectedPiece.getLocation() - (squaresPerRow * 2) + 1;
+    if (0 <= checkSqaure && checkSqaure < (squaresPerRow * squaresPerRow) && (checkOccupied(checkSqaure) != selectedPiece.getColor()) && selectedPiece.getLocation() % squaresPerRow !=(squaresPerRow-1)){
+        possibleMoves.push(checkSqaure);
+    }
+
+    checkSqaure = selectedPiece.getLocation() - (squaresPerRow) + 2;
+    if (0 <= checkSqaure && checkSqaure < (squaresPerRow * squaresPerRow) && (checkOccupied(checkSqaure) != selectedPiece.getColor()) && selectedPiece.getLocation() % squaresPerRow !=(squaresPerRow-1) && selectedPiece.getLocation() % squaresPerRow !=(squaresPerRow-2)){
+        possibleMoves.push(checkSqaure);
+    }
+
+    checkSqaure = selectedPiece.getLocation() + (squaresPerRow) + 2;
+    if (0 <= checkSqaure && checkSqaure < (squaresPerRow * squaresPerRow) && (checkOccupied(checkSqaure) != selectedPiece.getColor()) && selectedPiece.getLocation() % squaresPerRow !=(squaresPerRow-1) && selectedPiece.getLocation() % squaresPerRow !=(squaresPerRow-2)){
+        possibleMoves.push(checkSqaure);
+    }
+
+    checkSqaure = selectedPiece.getLocation() + (squaresPerRow * 2) + 1;
+    if (0 <= checkSqaure && checkSqaure < (squaresPerRow * squaresPerRow) && (checkOccupied(checkSqaure) != selectedPiece.getColor()) && selectedPiece.getLocation() % squaresPerRow !=(squaresPerRow-1)){
+        possibleMoves.push(checkSqaure);
+    }
+
+    checkSqaure = selectedPiece.getLocation() + (squaresPerRow * 2) - 1;
+    if (0 <= checkSqaure && checkSqaure < (squaresPerRow * squaresPerRow) && (checkOccupied(checkSqaure) != selectedPiece.getColor()) && selectedPiece.getLocation() % squaresPerRow !=0){
+        possibleMoves.push(checkSqaure);
+    }
+
+    checkSqaure = selectedPiece.getLocation() + (squaresPerRow) - 2;
+    if (0 <= checkSqaure && checkSqaure < (squaresPerRow * squaresPerRow) && (checkOccupied(checkSqaure) != selectedPiece.getColor()) && selectedPiece.getLocation() % squaresPerRow !=0 && selectedPiece.getLocation() % squaresPerRow !=1){
+        possibleMoves.push(checkSqaure);
+    }
+
+    checkSqaure = selectedPiece.getLocation() - (squaresPerRow) - 2;
+    if (0 <= checkSqaure && checkSqaure < (squaresPerRow * squaresPerRow) && (checkOccupied(checkSqaure) != selectedPiece.getColor()) && selectedPiece.getLocation() % squaresPerRow !=0 && selectedPiece.getLocation() % squaresPerRow !=1){
+        possibleMoves.push(checkSqaure);
+    }
+
 
 }
 
