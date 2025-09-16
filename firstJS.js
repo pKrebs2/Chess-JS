@@ -96,6 +96,8 @@ for (var i = 0; i < boardArray.length; i++){
 }
 
 
+
+
 for(var i = 0; i < piece.length; i++){
     // console.log(piece.length);
     piece[i].addEventListener('mousedown', mouseDown);
@@ -248,7 +250,7 @@ function getMiddleOfBoard(){
 function isMoveLegal(newSquareIndex, oldSquareIndex, possibleMoves){
     if (possibleMoves.includes(newSquareIndex)){
         turn = !turn;
-        //flipBoard();
+        // flipBoard();
 
         if(enPassantCaptures != -1 && ((newSquareIndex == moves[moves.length-1][1].getLocation() + squaresPerRow) || (moves[moves.length-1][1].getLocation() - squaresPerRow))){
             doCapture(enPassantCaptures, true);
@@ -273,10 +275,15 @@ function isMoveLegal(newSquareIndex, oldSquareIndex, possibleMoves){
 //This function will have a lot to it lol
 //Calculated when the piece is picked up
 function getPossibleMoves(){
-    if (!((selectedPiece.getColor == "white" && turn == false) || (selectedPiece.getColor() == "black" && turn == true))){
+    // console.log("gpm " + (!((selectedPiece.getColor == "white" && turn == false) || (selectedPiece.getColor() == "black" && turn == true))));
+    if (!((selectedPiece.getColor() == "white" && turn == false) || (selectedPiece.getColor() == "black" && turn == true))){
         // possibleMoves = [selectedPiece[2]];
         if(selectedPiece.getPieceType() == "pawn"){
             pawnRules();
+        }
+
+        else if(selectedPiece.getPieceType() == "bishop"){
+            bishopRules();
         }
     }
     
@@ -357,9 +364,56 @@ function pawnRules(){
         }
     }
     
+}
+
+function bishopRules(){
+    // console.log("br");
+    var index = selectedPiece.getLocation() - squaresPerRow - 1;
+    var prevIndex = selectedPiece.getLocation();
+    console.log("check1 " + prevIndex  % squaresPerRow);
+    while ((index > 0) && (prevIndex  % squaresPerRow != 0) && (checkOccupied(index) != selectedPiece.getColor()) && (checkOccupied(prevIndex) == -1 || prevIndex == selectedPiece.getLocation())){ //up-left
+        possibleMoves.push(index);
+
+        prevIndex = index;
+        index -= squaresPerRow + 1;
+    }
+
+
+    index = selectedPiece.getLocation() - squaresPerRow + 1;
+    prevIndex = selectedPiece.getLocation();
+    while ((index > 0) && (prevIndex % squaresPerRow != (squaresPerRow-1)) && (checkOccupied(index) != selectedPiece.getColor()) && (checkOccupied(prevIndex) == -1 || prevIndex == selectedPiece.getLocation())){ //up-right
+        // console.log(index);
+        possibleMoves.push(index);
+
+        prevIndex = index;
+        index -= squaresPerRow - 1;
+    }
+
+    index = selectedPiece.getLocation() + squaresPerRow - 1;
+    prevIndex = selectedPiece.getLocation();
+    while ((index < (squaresPerRow * squaresPerRow)) && (prevIndex % squaresPerRow != 0) && (checkOccupied(index) != selectedPiece.getColor() && (checkOccupied(prevIndex) == -1 || prevIndex == selectedPiece.getLocation()))){ //down-left
+        // console.log(index);
+        possibleMoves.push(index);
+
+        prevIndex = index;
+        index += squaresPerRow - 1;
+    }
+
+    index = selectedPiece.getLocation() + squaresPerRow + 1;
+    prevIndex = selectedPiece.getLocation();
+    while ((index < (squaresPerRow * squaresPerRow)) && (prevIndex % squaresPerRow != (squaresPerRow-1)) && (checkOccupied(index) != selectedPiece.getColor()) && (checkOccupied(prevIndex) == -1 || prevIndex == selectedPiece.getLocation())){ //down-right
+        // console.log(index);
+        possibleMoves.push(index);
+
+        prevIndex = index;
+        index += squaresPerRow + 1;
+    }
     
 
-    
+}
+
+
+function rookRules(){ //Castling will be handled by the king, or it's own function. idk
 
 }
 
