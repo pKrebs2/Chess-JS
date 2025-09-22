@@ -6,7 +6,6 @@ $squareSize = 70;
 $squaresPerRow = 8;
 $pieceSizePercentage = .6;
 $borderSize = 0;
-$hexAtPieceCreation;
 $playingBlack = false; //always set to false: needs a change
 ?>
 <style>
@@ -20,7 +19,7 @@ $playingBlack = false; //always set to false: needs a change
 
     
     .white{
-
+        /* filter: hue-rotate(77deg); */
     }
     
     .black{
