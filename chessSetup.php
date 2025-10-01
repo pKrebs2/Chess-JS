@@ -241,7 +241,7 @@ $playingBlack = false; //always set to false: needs a change
          
         
 
-        <script src="firstJS.js"></script>
+        <script src="chessRules.js"></script>
         
 
 
