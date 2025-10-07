@@ -3,12 +3,14 @@
 <head>
 <?php 
 $squareSize = 70;
-$squaresPerRow = 18;
+$squaresPerRow = 8;
 $pieceSizePercentage = .6;
 $borderSize = 0;
 $playingBlack = false; //always set to false: needs a change
 ?>
 <style>
+
+   
    
    body{
         background-color: lightblue;
@@ -103,13 +105,27 @@ $playingBlack = false; //always set to false: needs a change
         width: 100px;
     }
    
+    .promotionContainer {
+        gap: 10px; 
+        align-items: flex-start; 
+        display: none;
+    }
 
 
 </style>
 
 </head>
     <body>
+        <div class="promotionContainer" id = "promotionContainer">
+            <div> <button type="button" onclick="promotion('queen')" id="button" >Queen</button></div>
+            <div> <button type="button" onclick="promotion('rook')" id="button" >Rook</button></div>
+            <div> <button type="button" onclick="promotion('bishop')" id="button" >Bishop</button></div>
+            <div> <button type="button" onclick="promotion('knight')" id="button" >Knight</button></div>
+        </div>
+
+        
         <button type="button" onclick="flipBoard()" id="button" >Flip board</button>
+        
         
         
         
@@ -277,9 +293,10 @@ $playingBlack = false; //always set to false: needs a change
 
     </div>
 
-    <?php
     
-    ?>
+
+
+
         <!-- <div
         class = "piece white" id = "0"></div>
         <div

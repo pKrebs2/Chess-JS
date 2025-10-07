@@ -10,6 +10,7 @@ var selectedPiece;
 var possibleMoves = [];
 var enPassantCaptures = -1;
 var isMouseDown = false;
+var continuePlay = true;
 
 const boardArray = phpBoard;
 
@@ -280,14 +281,20 @@ function isMoveLegal(newSquareIndex, oldSquareIndex, possibleMoves){
         }
 
         if(selectedPiece.getPieceType() == "king" && Math.abs(newSquareIndex - oldSquareIndex) == 2){
-            console.log("HERE");
             moveRookForCastle(newSquareIndex, oldSquareIndex);
         }
 
         var oldPiece = new bPiece(selectedPiece.getColor(), selectedPiece.getPieceType(), oldSquareIndex);
         selectedPiece.setLocation(newSquareIndex);
         moves.push([oldPiece, selectedPiece]);
-
+        
+        if(selectedPiece.getPieceType() == "pawn"){
+            if (newSquareIndex < squaresPerRow || newSquareIndex >= (squaresPerRow*(squaresPerRow-1))){
+                var pawnButtons = document.getElementById('promotionContainer');
+                pawnButtons.style.display = "flex";
+                continuePlay = false;
+            }
+        }
         
     }else if(newSquareIndex == oldSquareIndex){
         return true; // I know this seems like it should be false, but true is correct
@@ -302,7 +309,7 @@ function isMoveLegal(newSquareIndex, oldSquareIndex, possibleMoves){
 //Calculated when the piece is picked up
 function getPossibleMoves(){
     // console.log("gpm " + (!((selectedPiece.getColor == "white" && turn == false) || (selectedPiece.getColor() == "black" && turn == true))));
-    if (!((selectedPiece.getColor() == "white" && turn == false) || (selectedPiece.getColor() == "black" && turn == true))){
+    if (!((selectedPiece.getColor() == "white" && turn == false) || (selectedPiece.getColor() == "black" && turn == true)) && continuePlay){
         // possibleMoves = [selectedPiece[2]];
         if(selectedPiece.getPieceType() == "pawn"){
             possibleMoves.push(...pawnRules());
@@ -417,6 +424,37 @@ function pawnRules(){
 
     return localPossibleMoves;
     
+}
+
+function promotion(newPiece){
+    var localPieceIndex;
+    var localPieceLocation = moves[moves.length-1][1].getLocation();
+    var i = 0;
+    while(localPieceLocation != board[i].getLocation()){
+        i++;
+    }
+    localPieceIndex = i;
+    
+    var localPiece = piece[localPieceIndex];
+    if(newPiece == "queen"){
+        localPiece.style.backgroundImage = 'url("queen.png")';
+        board[localPieceIndex].setPieceType("queen");
+        // myElement.style.backgroundImage = 'url("path/to/your/new-image.jpg")';
+    }else if(newPiece == "rook"){
+        localPiece.style.backgroundImage = 'url("rook.png")';
+        board[localPieceIndex].setPieceType("rook");
+    }else if(newPiece == "bishop"){
+        localPiece.style.backgroundImage = 'url("bishop.png")';
+        board[localPieceIndex].setPieceType("bishop");
+    }else if(newPiece == "knight"){
+        localPiece.style.backgroundImage = 'url("knight.png")';
+        board[localPieceIndex].setPieceType("kight");
+    }
+
+    var pawnButtons = document.getElementById('promotionContainer');
+    pawnButtons.style.display = "none";
+    continuePlay = true;
+
 }
 
 function bishopRules(){
