@@ -3,7 +3,7 @@
 <head>
 <?php 
 $squareSize = 70;
-$squaresPerRow = 8;
+$squaresPerRow = 18;
 $pieceSizePercentage = .6;
 $borderSize = 0;
 $playingBlack = false; //always set to false: needs a change
@@ -145,11 +145,74 @@ $playingBlack = false; //always set to false: needs a change
         
         
         
-        $boardInfo = [[1,3,0], [1,2,1], [1,1,2], [1,4,3], [1,5,4], [1,1,5], [1,2,6], [1,3,7],
-                    [1,0,8], [1,0,9], [1,0,10], [1,0,11], [1,0,12], [1,0,13], [1,0,14], [1,0,15],
-                    [0,0,48],[0,0,49],[0,0,50],[0,0,51],[0,0,52],[0,0,53],[0,0,54],[0,0,55],
-                    [0,3,56], [0,2,57], [0,1,58], [0,4,59], [0,5,60], [0,1,61], [0,2,62], [0,3,63]];
+        // $boardInfo = [[1,3,0], [1,2,1], [1,1,2], [1,4,3], [1,5,4], [1,1,5], [1,2,6], [1,3,7],
+        //             [1,0,8], [1,0,9], [1,0,10], [1,0,11], [1,0,12], [1,0,13], [1,0,14], [1,0,15],
+        //             [0,0,48],[0,0,49],[0,0,50],[0,0,51],[0,0,52],[0,0,53],[0,0,54],[0,0,55],
+        //             [0,3,56], [0,2,57], [0,1,58], [0,4,59], [0,5,60], [0,1,61], [0,2,62], [0,3,63]];
                     //White/black 0=white, piece_type pawn=0 bishop=1 knight=2 rook=3 queen=4 king=5, square index
+
+        $boardInfo = [];
+
+        array_push($boardInfo, [1,3,0]);
+        array_push($boardInfo, [1,3,$squaresPerRow-1]);
+        $blackKingLocation = $squaresPerRow/2;
+        if(!is_int($blackKingLocation)){
+            $blackKingLocation = floor($blackKingLocation);
+        }
+        array_push($boardInfo, [1,5,$blackKingLocation]);
+        array_push($boardInfo, [1,4,$blackKingLocation-1]);//black queen
+
+        for($i = 0; $i + $blackKingLocation + 1 < $squaresPerRow-1; $i++){//bishops and knights right
+            if($i % 2 == 0){
+                array_push($boardInfo, [1,1,$i + $blackKingLocation+1]);
+            }else{
+                array_push($boardInfo, [1,2,$i + $blackKingLocation+1]);
+            }
+        }
+
+        for($i = 0; ($blackKingLocation - $i - 2) % $squaresPerRow != 0; $i++){//bishops and knights left
+            if($i % 2 == 0){
+                array_push($boardInfo, [1,1,$blackKingLocation-$i-2]);
+            }else{
+                array_push($boardInfo, [1,2,$blackKingLocation-$i-2]);
+            }
+        }
+
+        for ($i = 0; $i < $squaresPerRow; $i++){//black pawns
+            // $boardInfo[] = [1,1,$i];
+            array_push($boardInfo, [1,0,$i + $squaresPerRow]);
+        }
+
+        for ($i = 0; $i < $squaresPerRow; $i++){//white pawns
+            // $boardInfo[] = [1,1,$i];
+            array_push($boardInfo, [0,0,$i + ($squaresPerRow * ($squaresPerRow-2))]);
+        }
+
+
+        array_push($boardInfo, [0,3,($squaresPerRow*($squaresPerRow-1))]);
+        array_push($boardInfo, [0,3,$squaresPerRow*$squaresPerRow-1]);
+        $whiteKingLocation = ($squaresPerRow/2) + ($squaresPerRow*($squaresPerRow-1));
+        if(!is_int($whiteKingLocation)){
+            $whiteKingLocation = floor($whiteKingLocation);
+        }
+        array_push($boardInfo, [0,5,$whiteKingLocation]);
+        array_push($boardInfo, [0,4,$whiteKingLocation-1]);//black queen
+
+        for($i = 0; $i + $blackKingLocation + 1 < $squaresPerRow-1; $i++){//bishops and knights right
+            if($i % 2 == 0){
+                array_push($boardInfo, [0,1,$i + $whiteKingLocation+1]);
+            }else{
+                array_push($boardInfo, [0,2,$i + $whiteKingLocation+1]);
+            }
+        }
+
+        for($i = 0; ($whiteKingLocation - $i - 2) % $squaresPerRow != 0; $i++){//bishops and knights left
+            if($i % 2 == 0){
+                array_push($boardInfo, [0,1,$whiteKingLocation-$i-2]);
+            }else{
+                array_push($boardInfo, [0,2,$whiteKingLocation-$i-2]);
+            }
+        }
 
         ?>
         <script>
