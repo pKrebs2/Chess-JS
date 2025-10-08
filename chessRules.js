@@ -295,6 +295,15 @@ function isMoveLegal(newSquareIndex, oldSquareIndex, possibleMoves){
                 continuePlay = false;
             }
         }
+
+        console.log("checkCheck " + (checkCheck(-1, (selectedPiece.getColor() == "white" ? "black" : "white"), ["UP", "UPRIGHT", "RIGHT", "DOWNRIGHT", "DOWN", "DOWNLEFT", "LEFT", "UPLEFT"],-1)));
+        if(checkCheck(-1, (selectedPiece.getColor() == "white" ? "black" : "white"), ["UP", "UPRIGHT", "RIGHT", "DOWNRIGHT", "DOWN", "DOWNLEFT", "LEFT", "UPLEFT"], -1)){
+            glowCheckSquares(selectedPiece.getColor() == "white" ? "black" : "white");
+            if(checkMateCheck(selectedPiece.getColor() == "white" ? "black" : "white")){
+                console.log("CHECKMAATE");
+                checkMateGlow(selectedPiece.getColor() == "white" ? "black" : "white");
+            }
+        }
         
     }else if(newSquareIndex == oldSquareIndex){
         return true; // I know this seems like it should be false, but true is correct
@@ -305,6 +314,57 @@ function isMoveLegal(newSquareIndex, oldSquareIndex, possibleMoves){
 
 }
 
+function checkMateCheck(kingColor){
+    //Checking kings outs first then looping through remaining peices.
+    kingLocations = [];
+    for (let i = 0; i < board.length; i++){ //Stole this from down below
+        if (board[i].getPieceType() == "king" && board[i].getColor() == kingColor){
+            kingLocations.push(board[i].getLocation()); 
+        }
+    }
+
+    for(let i = 0; i < kingLocations.length; i++){
+        if((kingRules(kingLocations[i], kingColor)).length > 0){//Don't need to check for check again because kingRules (or whatever piece already does that)
+            return false;
+        }
+
+        for(let j = 0; j < board.length; j++){
+            if(board[j].getPieceType() == "queen" && board[j].getColor() == kingColor){
+                if((bishopRules(board[j].getLocation(), board[j].getColor()).length) > 0){
+                    return false;
+                }
+                if((rookRules(board[j].getLocation(), board[j].getColor()).length) > 0){
+                    return false;
+                }
+            }
+            if(board[j].getPieceType() == "pawn" && board[j].getColor() == kingColor){
+                if((pawnRules(board[j].getLocation(), board[j].getColor()).length) > 0){
+                    return false;
+                }
+            }
+            if(board[j].getPieceType() == "bishop" && board[j].getColor() == kingColor){
+                if((bishopRules(board[j].getLocation(), board[j].getColor()).length) > 0){
+                    return false;
+                }
+            }
+            if(board[j].getPieceType() == "knight" && board[j].getColor() == kingColor){
+                if((knightRules(board[j].getLocation(), board[j].getColor()).length) > 0){
+                    return false;
+                }
+            }
+            if(board[j].getPieceType() == "rook" && board[j].getColor() == kingColor){
+                if((rookRules(board[j].getLocation(), board[j].getColor()).length) > 0){
+                    return false;
+                }
+            }
+
+        }
+
+    }
+
+    return true;
+}
+
 //This function will have a lot to it lol
 //Calculated when the piece is picked up
 function getPossibleMoves(){
@@ -312,33 +372,32 @@ function getPossibleMoves(){
     if (!((selectedPiece.getColor() == "white" && turn == false) || (selectedPiece.getColor() == "black" && turn == true)) && continuePlay){
         // possibleMoves = [selectedPiece[2]];
         if(selectedPiece.getPieceType() == "pawn"){
-            possibleMoves.push(...pawnRules());
+            possibleMoves.push(...pawnRules(selectedPiece.getLocation(), selectedPiece.getColor()));
         }
 
         else if(selectedPiece.getPieceType() == "bishop"){
-            possibleMoves.push(...bishopRules());
+            possibleMoves.push(...bishopRules(selectedPiece.getLocation(), selectedPiece.getColor()));
         }
 
         else if(selectedPiece.getPieceType() == "rook"){
-            possibleMoves.push(...rookRules());
+            possibleMoves.push(...rookRules(selectedPiece.getLocation(), selectedPiece.getColor()));
         }
 
         else if(selectedPiece.getPieceType() == "queen"){
-            possibleMoves.push(...bishopRules());
-            possibleMoves.push(...rookRules());
+            possibleMoves.push(...bishopRules(selectedPiece.getLocation(), selectedPiece.getColor()));
+            possibleMoves.push(...rookRules(selectedPiece.getLocation(), selectedPiece.getColor()));
             
         }
 
         else if(selectedPiece.getPieceType() == "knight"){
-            possibleMoves.push(...knightRules());
+            possibleMoves.push(...knightRules(selectedPiece.getLocation(), selectedPiece.getColor()));
         }
         else if(selectedPiece.getPieceType() == "king"){
-            possibleMoves.push(...kingRules());
+            possibleMoves.push(...kingRules(selectedPiece.getLocation(), selectedPiece.getColor()));
         }
     }
 
 
-    // checkCheck(-1, "white", ["UP", "UPRIGHT", "RIGHT", "DOWNRIGHT", "DOWN", "DOWNLEFT", "LEFT", "UPLEFT"]);
     
 
 
@@ -357,70 +416,92 @@ function glowPossibleSquares(){
     }
 }
 
+
 function unglowPossibleSquares(){
     console.log("unglow");
-    for(var i = 0; i < possibleMoves.length; i++){
-        // console.log(tempSquareColors.get(possibleMoves[i]));
-        square[possibleMoves[i]].style.backgroundColor = tempSquareColors.get(possibleMoves[i]);
-        // console.log(square[possibleMoves[i]].style.backgroundColor);
-
+    // for(var i = 0; i < tempSquareColors.length; i++){
+    //     // console.log(tempSquareColors.get(possibleMoves[i]));
+    //     square[possibleMoves[i]].style.backgroundColor = tempSquareColors.get(possibleMoves[i]);
+    //     // console.log(square[possibleMoves[i]].style.backgroundColor);
         
+        
+        
+    // }
 
+    for (const [key, value] of tempSquareColors) {
+        square[key].style.backgroundColor = value;
     }
-    tempSquareColors.clear();
 
+    tempSquareColors.clear();
+    
+    
+}
+
+function glowCheckSquares(kingColor){
+    for (var i = 0; i < board.length; i++){
+        if(board[i].getPieceType() == "king" && board[i].getColor() == kingColor){
+            tempSquareColors.set(board[i].getLocation(), square[board[i].getLocation()].style.backgroundColor);
+            square[board[i].getLocation()].style.backgroundColor = "red";
+        }
+    }
 
 }
 
+function checkMateGlow(kingColor){
+    for (var i = 0; i < board.length; i++){
+        if(board[i].getColor() == kingColor && board[i].getLocation() != -1){
+            // tempSquareColors.set(board[i].getLocation(), square[board[i].getLocation()].style.backgroundColor);
+            square[board[i].getLocation()].style.backgroundColor = "red";
+        }
+    }
 
-function pawnRules(){
+}
+
+function pawnRules(location, color){
     var localPossibleMoves = [];
     //Thought about doing some crazy math so black and white could use the same calculation. But then decided against it bc it's only for pawns
     //Normal move
-    if(selectedPiece.getColor() == "white" && (checkOccupied(selectedPiece.getLocation() - squaresPerRow, board) == -1)){
-        localPossibleMoves.push(selectedPiece.getLocation() - squaresPerRow);
-    }else if(selectedPiece.getColor() == "black" && (checkOccupied(selectedPiece.getLocation() + squaresPerRow, board) == -1)){
-        localPossibleMoves.push(selectedPiece.getLocation() + squaresPerRow);
+    if(color == "white" && (checkOccupied(location - squaresPerRow, board) == -1)){
+        localPossibleMoves.push(location - squaresPerRow);
+    }else if(color == "black" && (checkOccupied(location + squaresPerRow, board) == -1)){
+        localPossibleMoves.push(location + squaresPerRow);
     }
 
 
     //Moving two on the first move
-    if((selectedPiece.getColor() == "white") && (squaresPerRow * (squaresPerRow -2)) <= (selectedPiece.getLocation()) && (selectedPiece.getLocation()) < (squaresPerRow * (squaresPerRow -1)) && checkOccupied(selectedPiece.getLocation() - (2 * squaresPerRow), board) == -1 && checkOccupied(selectedPiece.getLocation() - squaresPerRow, board) == -1){
-        localPossibleMoves.push(selectedPiece.getLocation() - (2 * squaresPerRow));
-    }else if((selectedPiece.getColor() == "black") && (squaresPerRow) <= (selectedPiece.getLocation()) && (selectedPiece.getLocation()) < (squaresPerRow * 2) && checkOccupied(selectedPiece.getLocation() + (2 * squaresPerRow), board) == -1 && checkOccupied(selectedPiece.getLocation() + squaresPerRow, board) == -1){
-        localPossibleMoves.push(selectedPiece.getLocation() + (2 * squaresPerRow));
+    if((color == "white") && (squaresPerRow * (squaresPerRow -2)) <= (location) && (location) < (squaresPerRow * (squaresPerRow -1)) && checkOccupied(location - (2 * squaresPerRow), board) == -1 && checkOccupied(location - squaresPerRow, board) == -1){
+        localPossibleMoves.push(location - (2 * squaresPerRow));
+    }else if((color == "black") && (squaresPerRow) <= (location) && (location) < (squaresPerRow * 2) && checkOccupied(location + (2 * squaresPerRow), board) == -1 && checkOccupied(location + squaresPerRow, board) == -1){
+        localPossibleMoves.push(location + (2 * squaresPerRow));
     }
 
     //Capturing
     
-    if(selectedPiece.getColor() == "white" && (checkOccupied(selectedPiece.getLocation() - squaresPerRow + 1, board) == "black") && (selectedPiece.getLocation() % squaresPerRow != squaresPerRow -1)){
-        localPossibleMoves.push(selectedPiece.getLocation() - squaresPerRow + 1);
-    }else if(selectedPiece.getColor() == "black" && (checkOccupied(selectedPiece.getLocation() + squaresPerRow + 1, board) == "white") && (selectedPiece.getLocation() % squaresPerRow != squaresPerRow -1)){
-        localPossibleMoves.push(selectedPiece.getLocation() + squaresPerRow + 1);
+    if(color == "white" && (checkOccupied(location - squaresPerRow + 1, board) == "black") && (location % squaresPerRow != squaresPerRow -1)){
+        localPossibleMoves.push(location - squaresPerRow + 1);
+    }else if(color == "black" && (checkOccupied(location + squaresPerRow + 1, board) == "white") && (location % squaresPerRow != squaresPerRow -1)){
+        localPossibleMoves.push(location + squaresPerRow + 1);
     }
 
-    if(selectedPiece.getColor() == "white" && (checkOccupied(selectedPiece.getLocation() - squaresPerRow - 1, board) == "black") && (selectedPiece.getLocation() % squaresPerRow != 0)){
-        localPossibleMoves.push(selectedPiece.getLocation() - squaresPerRow - 1);
-    }else if(selectedPiece.getColor() == "black" && (checkOccupied(selectedPiece.getLocation() + squaresPerRow - 1, board) == "white") && (selectedPiece.getLocation() % squaresPerRow != 0)){
-        localPossibleMoves.push(selectedPiece.getLocation() + squaresPerRow - 1);
+    if(color == "white" && (checkOccupied(location - squaresPerRow - 1, board) == "black") && (location % squaresPerRow != 0)){
+        localPossibleMoves.push(location - squaresPerRow - 1);
+    }else if(color == "black" && (checkOccupied(location + squaresPerRow - 1, board) == "white") && (location % squaresPerRow != 0)){
+        localPossibleMoves.push(location + squaresPerRow - 1);
     }
 
     //En Passant
     if (moves.length > 0){
         console.log("moves, checking for en " + moves[moves.length-1][0].getPieceType());
-        if((moves[moves.length-1][0].getPieceType() == "pawn") && (moves[moves.length-1][1].getLocation() == moves[moves.length-1][0].getLocation() + (squaresPerRow * 2)) && (selectedPiece.getColor() == "white") && ((selectedPiece.getLocation() == moves[moves.length-1][1].getLocation() + 1) || (selectedPiece.getLocation() == moves[moves.length-1][1].getLocation() - 1)) && (squaresPerRow*3 <= selectedPiece.getLocation()) && selectedPiece.getLocation() < squaresPerRow*4){//The last two conditions are just for wrap around but I didn't feel like doing the mod math
+        if((moves[moves.length-1][0].getPieceType() == "pawn") && (moves[moves.length-1][1].getLocation() == moves[moves.length-1][0].getLocation() + (squaresPerRow * 2)) && (color == "white") && ((location == moves[moves.length-1][1].getLocation() + 1) || (location == moves[moves.length-1][1].getLocation() - 1)) && (squaresPerRow*3 <= location) && location < squaresPerRow*4){//The last two conditions are just for wrap around but I didn't feel like doing the mod math
             localPossibleMoves.push(moves[moves.length-1][0].getLocation() + squaresPerRow);
             enPassantCaptures = (moves[moves.length-1][1].getLocation());
         }
-        if((moves[moves.length-1][0].getPieceType() == "pawn") && (moves[moves.length-1][1].getLocation() == moves[moves.length-1][0].getLocation() - (squaresPerRow * 2)) && (selectedPiece.getColor() == "black") && ((selectedPiece.getLocation() == moves[moves.length-1][1].getLocation() + 1) || (selectedPiece.getLocation() == moves[moves.length-1][1].getLocation() - 1)) && (squaresPerRow*(squaresPerRow-4) <= selectedPiece.getLocation()) && selectedPiece.getLocation() < squaresPerRow*(squaresPerRow-3)){//The last two conditions are just for wrap around but I didn't feel like doing the mod math
+        if((moves[moves.length-1][0].getPieceType() == "pawn") && (moves[moves.length-1][1].getLocation() == moves[moves.length-1][0].getLocation() - (squaresPerRow * 2)) && (color == "black") && ((location == moves[moves.length-1][1].getLocation() + 1) || (location == moves[moves.length-1][1].getLocation() - 1)) && (squaresPerRow*(squaresPerRow-4) <= location) && location < squaresPerRow*(squaresPerRow-3)){//The last two conditions are just for wrap around but I didn't feel like doing the mod math
             localPossibleMoves.push(moves[moves.length-1][0].getLocation() - squaresPerRow);
             enPassantCaptures = (moves[moves.length-1][1].getLocation());
         }
     }
-
-    console.log("before " + localPossibleMoves);
-    localPossibleMoves = checkCheckCallFunc(selectedPiece.getColor(), localPossibleMoves);
-    console.log("after " + localPossibleMoves);
+    localPossibleMoves = checkCheckCallFunc(color, localPossibleMoves, location);
 
     return localPossibleMoves;
     
@@ -448,7 +529,7 @@ function promotion(newPiece){
         board[localPieceIndex].setPieceType("bishop");
     }else if(newPiece == "knight"){
         localPiece.style.backgroundImage = 'url("knight.png")';
-        board[localPieceIndex].setPieceType("kight");
+        board[localPieceIndex].setPieceType("knight");
     }
 
     var pawnButtons = document.getElementById('promotionContainer');
@@ -457,10 +538,8 @@ function promotion(newPiece){
 
 }
 
-function bishopRules(){
+function bishopRules(location, color){
     var localPossibleMoves = [];
-    var location = selectedPiece.getLocation(); //Avoiding doing the same function call several times
-    var color = selectedPiece.getColor();
     
     localPossibleMoves.push(...directionalCheck(location, squaresPerRow + 1, color, board));
     localPossibleMoves.push(...directionalCheck(location, squaresPerRow - 1, color, board));
@@ -469,15 +548,13 @@ function bishopRules(){
 
 
 
-    localPossibleMoves = checkCheckCallFunc(color, localPossibleMoves);
+    localPossibleMoves = checkCheckCallFunc(color, localPossibleMoves, location);
 
     return localPossibleMoves;
 }
 
-function rookRules(){ //Castling will be handled by the king, or it's own function. idk
+function rookRules(location, color){ //Castling will be handled by the king, or it's own function. idk
     var localPossibleMoves = [];
-    var location = selectedPiece.getLocation(); //Avoiding doing the same function call several times
-    var color = selectedPiece.getColor();
     
     localPossibleMoves.push(...directionalCheck(location, 1, color, board));
     localPossibleMoves.push(...directionalCheck(location, -1, color, board));
@@ -485,15 +562,15 @@ function rookRules(){ //Castling will be handled by the king, or it's own functi
     localPossibleMoves.push(...directionalCheck(location, -squaresPerRow, color, board));
 
     
-    localPossibleMoves = checkCheckCallFunc(color, localPossibleMoves);
+    localPossibleMoves = checkCheckCallFunc(color, localPossibleMoves, location);
 
     return localPossibleMoves;
    
 }
 
-function checkCheckCallFunc(color, possibleMoves){
+function checkCheckCallFunc(color, possibleMoves, location){
     for (var i = 0; i < possibleMoves.length; i++){
-        if(checkCheck(possibleMoves[i], color, ["UP", "UPRIGHT", "RIGHT", "DOWNRIGHT", "DOWN", "DOWNLEFT", "LEFT", "UPLEFT"])){
+        if(checkCheck(possibleMoves[i], color, ["UP", "UPRIGHT", "RIGHT", "DOWNRIGHT", "DOWN", "DOWNLEFT", "LEFT", "UPLEFT"], location)){
             possibleMoves.splice(i--, 1);
         }
     }
@@ -524,11 +601,9 @@ function directionalCheck(oldIndex, increment, checkColor, board){ //Returns arr
 
 
 
-function knightRules(){
+function knightRules(location, color){
     //Just checking 8 squares
     var localPossibleMoves = [];
-    var location = selectedPiece.getLocation();
-    var color = selectedPiece.getColor();
 
     var checkSquare = location - (squaresPerRow * 2) - 1;
     for(var i = 0; i < 8; i ++){
@@ -541,17 +616,17 @@ function knightRules(){
     }
 
 
-    localPossibleMoves = checkCheckCallFunc(color, localPossibleMoves);
+    localPossibleMoves = checkCheckCallFunc(color, localPossibleMoves, location);
 
     return localPossibleMoves;
 }
 
 
-function kingRules(){
+function kingRules(location, color){
     //Just checking 8 squares
     var localPossibleMoves = [];
-    var location = selectedPiece.getLocation();
-    var color = selectedPiece.getColor();
+    //var location = selectedPiece.getLocation();
+    //var color = selectedPiece.getColor();
 
     var checkSquare = location - squaresPerRow;
     for(var i = 0; i < 8; i ++){
@@ -570,7 +645,7 @@ function kingRules(){
         localPossibleMoves.push(location - 2);
     }
 
-    localPossibleMoves = checkCheckCallFunc(color, localPossibleMoves);
+    localPossibleMoves = checkCheckCallFunc(color, localPossibleMoves, location);
 
     return localPossibleMoves;
     
@@ -578,7 +653,7 @@ function kingRules(){
 
 function canCastle(direction, localBoard){
     var squaresToRook;
-    if (!(checkCheck(possibleMoves[i], selectedPiece.getColor(), ["UP", "UPRIGHT", "RIGHT", "DOWNRIGHT", "DOWN", "DOWNLEFT", "LEFT", "UPLEFT"]))){
+    if (!(checkCheck(possibleMoves[i], selectedPiece.getColor(), ["UP", "UPRIGHT", "RIGHT", "DOWNRIGHT", "DOWN", "DOWNLEFT", "LEFT", "UPLEFT"])), selectedPiece.getLocation()){
         if(direction == "left"){
             increment = -1;
         }
@@ -704,18 +779,17 @@ function doCapture(squareIndex, isEnpassant){
 
 }
 
-function checkCheck(newPotentialIndex, kingColor, directionsToCheck){ 
+function checkCheck(newPotentialIndex, kingColor, directionsToCheck, oldIndex){ 
     retVal = false;
 
     if(newPotentialIndex != -1){
-        var checkBoard = cloneBoardWithEdit(newPotentialIndex);
+        var checkBoard = cloneBoardWithEdit(newPotentialIndex, oldIndex);
     }else{
         checkBoard = board;
     }
+    // console.log("checkBoard " + checkBoard);
     
-    for (var i = 0; i < checkBoard.length; i++){
-        checkBoard[i].getLocation();
-    }
+    
 
     
 
@@ -730,10 +804,11 @@ function checkCheck(newPotentialIndex, kingColor, directionsToCheck){
     // }
 
     for (var i = 0; i < checkBoard.length; i++){ //Used a for loop. Gonna account for multiple kings in case people are weird. 
-        if (checkBoard[i].getColor() == kingColor && checkBoard[i].getPieceType() == "king"){
-            kingLocations.push(checkBoard[i].getLocation()); 
+        if (checkBoard[i].getPieceType() == "king" && checkBoard[i].getColor() == kingColor){
+            kingLocations.push(checkBoard[i].getLocation());
         }
     }
+    
 
 ////////////////
 //Doing all these checks separately because I want to return if it's check rather than continuing on.
@@ -748,8 +823,9 @@ function checkCheck(newPotentialIndex, kingColor, directionsToCheck){
 
 }
 function isUnderAttack(checkLocation, checkBoard, kingColor, directionsToCheck, newPotentialIndex){
+    var oppColor;
     if(kingColor == "white"){
-        var oppColor = "black"
+        oppColor = "black"
     }else{
         oppColor = "white";
     }
@@ -857,19 +933,20 @@ function checkCheckDirectionalCheck(direction, kingColor, oppColor, checkBoard, 
 }
 
 
-function cloneBoardWithEdit(newIndex){
+function cloneBoardWithEdit(newIndex, loc){
     retVal = [];
-    loc = selectedPiece.getLocation();
 
     for (var i = 0; i < board.length; i++){
         // console.log(i);
-        
         if (loc == board[i].getLocation()){
             retVal.push(new bPiece(board[i].getColor(), board[i].getPieceType(), newIndex));
+        }else if(newIndex == board[i].getLocation()){
+
         }else{
             retVal.push(new bPiece(board[i].getColor(), board[i].getPieceType(), board[i].getLocation()));
         }
         
+        // console.log("retVal " + retVal[i].getLocation());
     }
 
     return retVal;
